@@ -1,6 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 
-export default function BackgroundForest() {
+// URL gambar kastil dari internet yang dijamin selalu muncul di Vercel
+const CASTLE_IMAGE_URL = "https://images.unsplash.com/photo-1508349937151-22b68b72d5b1?auto=format&fit=crop&w=1200&q=80";
+
+interface BackgroundForestProps {
+  children?: React.ReactNode;
+}
+
+export default function BackgroundForest({ children }: BackgroundForestProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
@@ -32,7 +39,6 @@ export default function BackgroundForest() {
     };
     window.addEventListener('resize', handleResize);
 
-    // Particle types: Fireflies & Gold Dust & Leaves
     interface Particle {
       x: number;
       y: number;
@@ -50,7 +56,6 @@ export default function BackgroundForest() {
 
     const particles: Particle[] = [];
 
-    // Initialize fireflies
     for (let i = 0; i < 30; i++) {
       particles.push({
         x: Math.random() * width,
@@ -66,7 +71,6 @@ export default function BackgroundForest() {
       });
     }
 
-    // Initialize golden stardust
     for (let i = 0; i < 60; i++) {
       particles.push({
         x: Math.random() * width,
@@ -82,7 +86,6 @@ export default function BackgroundForest() {
       });
     }
 
-    // Initialize golden leaves
     for (let i = 0; i < 15; i++) {
       particles.push({
         x: Math.random() * width,
@@ -100,33 +103,30 @@ export default function BackgroundForest() {
       });
     }
 
-    // Draw forest silhouette gradients
     const drawAmbientLighting = () => {
-      // Vignette & dark fantasy forest depth gradient
       const gradient = ctx.createRadialGradient(
-        width / 2 + (mousePos.x - width / 2) * 0.03, // subtle mouse parralax light source
+        width / 2 + (mousePos.x - width / 2) * 0.03,
         height / 4 + (mousePos.y - height / 2) * 0.03,
         height / 8,
         width / 2,
         height / 2,
         Math.max(width, height) * 0.8
       );
-      gradient.addColorStop(0, '#1A221C'); // faint deep forest green epicenter
-      gradient.addColorStop(0.4, '#111512'); // obsidian black
-      gradient.addColorStop(1, '#0B0C0A'); // pure void
+      // Diubah sedikit transparan agar gambar kastil di belakangnya tembus
+      gradient.addColorStop(0, 'rgba(26, 34, 28, 0.4)'); 
+      gradient.addColorStop(0.4, 'rgba(17, 21, 18, 0.7)'); 
+      gradient.addColorStop(1, 'rgba(11, 12, 10, 0.9)'); 
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, width, height);
 
-      // Draw subtle glowing god rays from top right
       ctx.save();
       ctx.globalCompositeOperation = 'screen';
       const rayGrd = ctx.createLinearGradient(width * 0.8, 0, width * 0.2, height);
-      rayGrd.addColorStop(0, 'rgba(199, 168, 109, 0.07)'); // gold ray base
+      rayGrd.addColorStop(0, 'rgba(199, 168, 109, 0.07)');
       rayGrd.addColorStop(0.5, 'rgba(26, 34, 28, 0.03)');
       rayGrd.addColorStop(1, 'rgba(0,0,0,0)');
       ctx.fillStyle = rayGrd;
 
-      // Draw 3 distinct volumetric beams
       ctx.beginPath();
       ctx.moveTo(width * 0.7, -100);
       ctx.lineTo(width * 1.1, -100);
@@ -147,7 +147,6 @@ export default function BackgroundForest() {
 
     const updateAndDrawParticles = () => {
       particles.forEach((p) => {
-        // Micro interactions: repel from mouse cursor
         const dx = p.x - mousePos.x;
         const dy = p.y - mousePos.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
@@ -157,12 +156,10 @@ export default function BackgroundForest() {
           p.y += (dy / dist) * force * 1.8;
         }
 
-        // Apply distinct behavior depending on type
         if (p.type === 'firefly') {
           p.phase += 0.015;
           p.x += p.speedX + Math.sin(p.phase) * 0.25;
           p.y += p.speedY + Math.cos(p.phase) * 0.15;
-          // Pulse the alpha of the firefly
           const pulseAlpha = Math.max(0.1, p.alpha * (0.6 + Math.sin(p.phase * 2.5) * 0.4));
 
           ctx.shadowBlur = p.size * 4;
@@ -171,7 +168,7 @@ export default function BackgroundForest() {
           ctx.beginPath();
           ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
           ctx.fill();
-          ctx.shadowBlur = 0; // Reset shadow for performance
+          ctx.shadowBlur = 0;
         } else if (p.type === 'dust') {
           p.x += p.speedX;
           p.y += p.speedY;
@@ -204,7 +201,6 @@ export default function BackgroundForest() {
           }
           ctx.fillStyle = `rgba(233, 223, 200, ${p.alpha})`;
           
-          // Draw a tiny organic gold-leaf silhouette
           ctx.beginPath();
           ctx.moveTo(0, -p.size);
           ctx.quadraticCurveTo(p.size * 0.6, -p.size * 0.2, 0, p.size);
@@ -214,7 +210,6 @@ export default function BackgroundForest() {
           ctx.restore();
         }
 
-        // Boundary safety wraps
         if (p.x < -20) p.x = width + 20;
         if (p.x > width + 20) p.x = -20;
       });
@@ -236,10 +231,21 @@ export default function BackgroundForest() {
   }, [mousePos]);
 
   return (
-    <canvas
-      ref={canvasRef}
-      className="fixed inset-0 pointer-events-none z-0 mix-blend-screen"
-      id="living-forest-canvas"
-    />
+    <div 
+      className="min-h-screen w-full bg-cover bg-center bg-no-repeat relative overflow-x-hidden"
+      style={{ backgroundImage: `url(${CASTLE_IMAGE_URL})` }}
+    >
+      {/* Canvas partikel kunang-kunang menari di atas foto kastil */}
+      <canvas
+        ref={canvasRef}
+        className="fixed inset-0 pointer-events-none z-0 mix-blend-screen"
+        id="living-forest-canvas"
+      />
+      
+      {/* Konten utama website kamu agar muncul di atas background */}
+      <div className="relative z-10 w-full min-h-screen">
+        {children}
+      </div>
+    </div>
   );
 }
