@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 
 // URL gambar kastil dari internet yang dijamin selalu muncul di Vercel
-const CASTLE_IMAGE_URL = "https://images.unsplash.com/photo-1508349937151-22b68b72d5b1?auto=format&fit=crop&w=1200&q=80";
+// Ganti baris nomor 4 menjadi link kastil gotik asli ini:
+const CASTLE_IMAGE_URL = "https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=1200&q=80";
 
 interface BackgroundForestProps {
   children?: React.ReactNode;
