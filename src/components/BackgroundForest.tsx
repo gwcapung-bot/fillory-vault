@@ -1,13 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 
-// URL gambar ilustrasi kastil gotik mistis yang sudah kita kunci
-const CASTLE_IMAGE_URL = "https://images.unsplash.com/photo-1516140304461-8e5285318667?auto=format&fit=crop&w=1200&q=80";
-
-interface BackgroundForestProps {
-  children?: React.ReactNode;
-}
-
-export default function BackgroundForest({ children }: BackgroundForestProps) {
+export default function BackgroundForest() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
@@ -39,6 +32,7 @@ export default function BackgroundForest({ children }: BackgroundForestProps) {
     };
     window.addEventListener('resize', handleResize);
 
+    // Particle types: Fireflies & Gold Dust & Leaves
     interface Particle {
       x: number;
       y: number;
@@ -56,7 +50,7 @@ export default function BackgroundForest({ children }: BackgroundForestProps) {
 
     const particles: Particle[] = [];
 
-    // --- INISIALISASI PARTIKEL (Tetap Sama) ---
+    // Initialize fireflies
     for (let i = 0; i < 30; i++) {
       particles.push({
         x: Math.random() * width,
@@ -71,6 +65,8 @@ export default function BackgroundForest({ children }: BackgroundForestProps) {
         type: 'firefly',
       });
     }
+
+    // Initialize golden stardust
     for (let i = 0; i < 60; i++) {
       particles.push({
         x: Math.random() * width,
@@ -85,6 +81,8 @@ export default function BackgroundForest({ children }: BackgroundForestProps) {
         type: 'dust',
       });
     }
+
+    // Initialize golden leaves
     for (let i = 0; i < 15; i++) {
       particles.push({
         x: Math.random() * width,
@@ -102,30 +100,33 @@ export default function BackgroundForest({ children }: BackgroundForestProps) {
       });
     }
 
-    // --- GAMBAR CAHAYA AMBIENT (Tetap Sama) ---
+    // Draw forest silhouette gradients
     const drawAmbientLighting = () => {
+      // Vignette & dark fantasy forest depth gradient
       const gradient = ctx.createRadialGradient(
-        width / 2 + (mousePos.x - width / 2) * 0.03,
+        width / 2 + (mousePos.x - width / 2) * 0.03, // subtle mouse parralax light source
         height / 4 + (mousePos.y - height / 2) * 0.03,
         height / 8,
         width / 2,
         height / 2,
         Math.max(width, height) * 0.8
       );
-      gradient.addColorStop(0, 'rgba(26, 34, 28, 0.3)'); 
-      gradient.addColorStop(0.4, 'rgba(17, 21, 18, 0.6)'); 
-      gradient.addColorStop(1, 'rgba(11, 12, 10, 0.8)'); 
+      gradient.addColorStop(0, '#1A221C'); // faint deep forest green epicenter
+      gradient.addColorStop(0.4, '#111512'); // obsidian black
+      gradient.addColorStop(1, '#0B0C0A'); // pure void
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, width, height);
 
+      // Draw subtle glowing god rays from top right
       ctx.save();
       ctx.globalCompositeOperation = 'screen';
       const rayGrd = ctx.createLinearGradient(width * 0.8, 0, width * 0.2, height);
-      rayGrd.addColorStop(0, 'rgba(199, 168, 109, 0.05)');
-      rayGrd.addColorStop(0.5, 'rgba(26, 34, 28, 0.02)');
+      rayGrd.addColorStop(0, 'rgba(199, 168, 109, 0.07)'); // gold ray base
+      rayGrd.addColorStop(0.5, 'rgba(26, 34, 28, 0.03)');
       rayGrd.addColorStop(1, 'rgba(0,0,0,0)');
       ctx.fillStyle = rayGrd;
 
+      // Draw 3 distinct volumetric beams
       ctx.beginPath();
       ctx.moveTo(width * 0.7, -100);
       ctx.lineTo(width * 1.1, -100);
@@ -133,12 +134,20 @@ export default function BackgroundForest({ children }: BackgroundForestProps) {
       ctx.lineTo(width * 0.0, height + 100);
       ctx.closePath();
       ctx.fill();
+
+      ctx.beginPath();
+      ctx.moveTo(width * 0.85, -100);
+      ctx.lineTo(width * 1.3, -100);
+      ctx.lineTo(width * 0.7, height + 100);
+      ctx.lineTo(width * 0.35, height + 100);
+      ctx.closePath();
+      ctx.fill();
       ctx.restore();
     };
 
-    // --- UPDATE & GAMBAR PARTIKEL (Tetap Sama) ---
     const updateAndDrawParticles = () => {
       particles.forEach((p) => {
+        // Micro interactions: repel from mouse cursor
         const dx = p.x - mousePos.x;
         const dy = p.y - mousePos.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
@@ -148,34 +157,54 @@ export default function BackgroundForest({ children }: BackgroundForestProps) {
           p.y += (dy / dist) * force * 1.8;
         }
 
+        // Apply distinct behavior depending on type
         if (p.type === 'firefly') {
           p.phase += 0.015;
           p.x += p.speedX + Math.sin(p.phase) * 0.25;
           p.y += p.speedY + Math.cos(p.phase) * 0.15;
+          // Pulse the alpha of the firefly
           const pulseAlpha = Math.max(0.1, p.alpha * (0.6 + Math.sin(p.phase * 2.5) * 0.4));
+
           ctx.shadowBlur = p.size * 4;
           ctx.shadowColor = '#D7BB7A';
           ctx.fillStyle = `rgba(215, 187, 122, ${pulseAlpha})`;
           ctx.beginPath();
           ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
           ctx.fill();
-          ctx.shadowBlur = 0;
+          ctx.shadowBlur = 0; // Reset shadow for performance
         } else if (p.type === 'dust') {
           p.x += p.speedX;
           p.y += p.speedY;
-          if (p.y < -10) { p.y = height + 10; p.x = Math.random() * width; }
+          if (p.y < -10) {
+            p.y = height + 10;
+            p.x = Math.random() * width;
+          }
+
           ctx.fillStyle = `rgba(199, 168, 109, ${p.alpha})`;
           ctx.beginPath();
           ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
           ctx.fill();
         } else if (p.type === 'leaf') {
-          p.phase += 0.01; p.x += p.speedX + Math.sin(p.phase) * 0.5; p.y += p.speedY;
-          if (p.rotation !== undefined && p.rotSpeed !== undefined) { p.rotation += p.rotSpeed; }
-          if (p.y > height + 20) { p.y = -20; p.x = Math.random() * width; }
+          p.phase += 0.01;
+          p.x += p.speedX + Math.sin(p.phase) * 0.5;
+          p.y += p.speedY;
+          if (p.rotation !== undefined && p.rotSpeed !== undefined) {
+            p.rotation += p.rotSpeed;
+          }
+
+          if (p.y > height + 20) {
+            p.y = -20;
+            p.x = Math.random() * width;
+          }
+
           ctx.save();
           ctx.translate(p.x, p.y);
-          if (p.rotation !== undefined) { ctx.rotate(p.rotation); }
+          if (p.rotation !== undefined) {
+            ctx.rotate(p.rotation);
+          }
           ctx.fillStyle = `rgba(233, 223, 200, ${p.alpha})`;
+          
+          // Draw a tiny organic gold-leaf silhouette
           ctx.beginPath();
           ctx.moveTo(0, -p.size);
           ctx.quadraticCurveTo(p.size * 0.6, -p.size * 0.2, 0, p.size);
@@ -184,6 +213,8 @@ export default function BackgroundForest({ children }: BackgroundForestProps) {
           ctx.fill();
           ctx.restore();
         }
+
+        // Boundary safety wraps
         if (p.x < -20) p.x = width + 20;
         if (p.x > width + 20) p.x = -20;
       });
@@ -204,27 +235,11 @@ export default function BackgroundForest({ children }: BackgroundForestProps) {
     };
   }, [mousePos]);
 
-  // --- REVISI PENEMPATAN ELEMEN CSS DISINI ---
   return (
-    <div className="min-h-screen w-full relative overflow-hidden">
-      
-      {/* 1. LAYER FOTO KASTIL: Sekarang fixed menempel di layar */}
-      <div 
-        className="fixed inset-0 w-full h-full bg-cover bg-center bg-no-repeat z-0"
-        style={{ backgroundImage: `url(${CASTLE_IMAGE_URL})` }}
-      />
-
-      {/* 2. LAYER CANVAS KUNANG-KUNANG: Fixed di atas foto, mix-blend */}
-      <canvas
-        ref={canvasRef}
-        className="fixed inset-0 w-full h-full pointer-events-none z-10 mix-blend-screen"
-        id="living-forest-canvas"
-      />
-      
-      {/* 3. LAYER KONTEN UTAMA: Relative agar tombol muncul di atas background, tanpa scroll */}
-      <div className="relative z-20 w-full min-h-screen flex flex-col items-center justify-center">
-        {children}
-      </div>
-    </div>
+    <canvas
+      ref={canvasRef}
+      className="fixed inset-0 pointer-events-none z-0 mix-blend-screen"
+      id="living-forest-canvas"
+    />
   );
 }
